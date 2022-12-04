@@ -29,7 +29,7 @@ import org.apache.hadoop.mapred.jobcontrol.JobControl;
  */
 public class App {
 	
-	private static final String DELIM = ",";
+	private static final String DELIM = ",(?!\\d+\")";
 	private static final String PAYMENT_TYPE = "Payment_Type";
 	private static final String PRODUCT = "Product";
 	private static final String TRANSACTION_DATE = "Transaction_date";
@@ -109,10 +109,6 @@ public class App {
 					ex.printStackTrace();
 				}
 			}
-			
-//			LocalDate writableDate = LocalDate.of(date.getYear(),date.getMonth(),date.getDate());
-//			
-//			System.out.println(writableDate.toString());
 			
 			word.set(slashFormatter.format(date));
 			output.collect(word, one);
