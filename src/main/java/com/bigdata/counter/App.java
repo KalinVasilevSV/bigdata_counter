@@ -3,7 +3,6 @@ package com.bigdata.counter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -73,7 +72,9 @@ public class App {
 				return;
 			}
 			
-			word.set(tokens[index]);
+			System.out.println(tokens[index]);
+			
+			word.set(tokens[index].trim());
 			output.collect(word, one);
 		}
     }
@@ -123,7 +124,7 @@ public class App {
 		@Override
 		public void reduce(Text key, Iterator<IntWritable> values, OutputCollector<Text, IntWritable> output,
 				Reporter reporter) throws IOException {
-    		int sum = 0;
+    		int sum = 1;
     		while(values.hasNext()) {
     			sum ++;
     			values.next();
