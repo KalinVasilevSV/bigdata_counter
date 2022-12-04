@@ -1,17 +1,16 @@
 package com.bigdata.counter;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
-import java.util.StringTokenizer;
 
-import org.apache.commons.text.matcher.StringMatcher;
-import org.apache.commons.text.matcher.StringMatcherFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
@@ -39,15 +38,6 @@ public class App {
     	private final static IntWritable one = new IntWritable(1);
     	private Text word = new Text();
     	private Integer index;
-    	
-//    	public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-//    		StringTokenizer itr = new StringTokenizer(value.toString());
-//    		
-//    		while(itr.hasMoreTokens()) {
-//    			word.set(itr.nextToken());
-//    			context.write(word, one);
-//    		}
-//    	}
 
 		@Override
 		public void map(Object key, Text value, OutputCollector<Text, IntWritable> output, Reporter reporter)
@@ -57,6 +47,7 @@ public class App {
 			
 			if(index == null) {
 				index = findIndex(tokens,PAYMENT_TYPE);
+				return;
 			}
 			
 			word.set(tokens[index]);
@@ -78,6 +69,7 @@ public class App {
 			
 			if(index == null) {
 				index = findIndex(tokens,PRODUCT);
+				return;
 			}
 			
 			word.set(tokens[index]);
@@ -90,6 +82,9 @@ public class App {
     	private final static IntWritable one = new IntWritable(1);
     	private Text word = new Text();
     	private Integer index;
+
+    	SimpleDateFormat pointFormat = new SimpleDateFormat("dd.MM.yy hh:mm");
+    	SimpleDateFormat slashFormat = new SimpleDateFormat("dd/MM/yy hh:mm");
     	
 		@Override
 		public void map(Object key, Text value, OutputCollector<Text, IntWritable> output, Reporter reporter)
@@ -99,9 +94,21 @@ public class App {
 			
 			if(index == null) {
 				index = findIndex(tokens,TRANSACTION_DATE);
+				return;
+			}
+
+			Date date = null;
+			try {
+				date = slashFormat.parse(tokens[index]);
+			} catch (ParseException e) {
+				try {
+				date = pointFormat.parse(tokens[index]);
+				} catch (ParseException ex) {
+					ex.printStackTrace();
+				}
 			}
 			
-			word.set(tokens[index]);
+			word.set(date.toString());
 			output.collect(word, one);
 		}
     	
@@ -111,16 +118,6 @@ public class App {
     	
     	private IntWritable result = new IntWritable();
     	
-//    	public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
-//    		
-//    		int sum = 0;
-//    		for (IntWritable val: values) {
-//    			sum += val.get();
-//    		}
-//    		result.set(sum);
-//    		context.write(key, result);
-//    	}
-
 		@Override
 		public void reduce(Text key, Iterator<IntWritable> values, OutputCollector<Text, IntWritable> output,
 				Reporter reporter) throws IOException {
@@ -164,15 +161,6 @@ public class App {
     	dateJob.setReducerClass(IntSumReducer.class);
     	dateJob.setInputFormat(TextInputFormat.class);
     	dateJob.setOutputFormat(TextOutputFormat.class);
-    	
-//        Configuration conf = new Configuration();
-//        Job job = Job.getInstance(conf, "word count");
-//        job.setJarByClass(App.class);
-//        job.setMapperClass(TokenizerMapper.class);
-//        job.setCombinerClass(IntSumReducer.class);
-//        job.setReducerClass(IntSumReducer.class);
-//        job.setMapOutputKeyClass(Text.class);
-//        job.setMapOutputValueClass(Text.class);
         
         FileInputFormat.setInputPaths(paymentJob, new Path("hdfs://localhost:9000/user/kalin/input/sales.csv"));
         FileOutputFormat.setOutputPath(paymentJob,new Path("hdfs://localhost:9000/user/kalin/output/payment"));
@@ -182,17 +170,13 @@ public class App {
         
         FileInputFormat.setInputPaths(dateJob, new Path("hdfs://localhost:9000/user/kalin/input/sales.csv"));
         FileOutputFormat.setOutputPath(dateJob,new Path("hdfs://localhost:9000/user/kalin/output/date"));
-        
-//        System.exit(job.waitForCompletion(true) ? 0 : 1);
-        
+
         JobControl control = new JobControl("job_control");
         control.addJob(new Job(paymentJob));
         control.addJob(new Job(productJob));
         control.addJob(new Job(dateJob));
         
         control.run();
-        
-//        System.exit(JobClient.runJob(paymentJob).isSuccessful() ? 0 : 1);
     }
     
     private static Integer findIndex(String[] tokens, String key) {
@@ -200,7 +184,6 @@ public class App {
 			if(key.equals(tokens[i]))
 				return i;
 		}
-		
 		return null;
     }
 }
