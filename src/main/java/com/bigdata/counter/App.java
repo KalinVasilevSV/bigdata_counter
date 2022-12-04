@@ -71,9 +71,7 @@ public class App {
 				index = findIndex(tokens,PRODUCT);
 				return;
 			}
-			
-			System.out.println(tokens[index]);
-			
+
 			word.set(tokens[index].trim());
 			output.collect(word, one);
 		}
