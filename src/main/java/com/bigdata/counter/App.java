@@ -3,6 +3,7 @@ package com.bigdata.counter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -83,8 +84,9 @@ public class App {
     	private Text word = new Text();
     	private Integer index;
 
-    	SimpleDateFormat pointFormat = new SimpleDateFormat("dd.MM.yy hh:mm");
-    	SimpleDateFormat slashFormat = new SimpleDateFormat("dd/MM/yy hh:mm");
+    	SimpleDateFormat pointFormat = new SimpleDateFormat("MM.dd.yy hh:mm");
+    	SimpleDateFormat slashFormat = new SimpleDateFormat("MM/dd/yy hh:mm");
+    	SimpleDateFormat slashFormatter = new SimpleDateFormat("MM/dd/yy");
     	
 		@Override
 		public void map(Object key, Text value, OutputCollector<Text, IntWritable> output, Reporter reporter)
@@ -108,7 +110,11 @@ public class App {
 				}
 			}
 			
-			word.set(date.toString());
+//			LocalDate writableDate = LocalDate.of(date.getYear(),date.getMonth(),date.getDate());
+//			
+//			System.out.println(writableDate.toString());
+			
+			word.set(slashFormatter.format(date));
 			output.collect(word, one);
 		}
     	
